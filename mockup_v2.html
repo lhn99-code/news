@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🐿️ 다람쥐 뽀모도로 — 요구사항 확인 목업 (v2)</title>
+<style>
+  /* 레트로 픽셀 폰트 (없으면 monospace로 폴백) */
+  @font-face{font-family:'Galmuri11';font-display:swap;
+    src:url('https://cdn.jsdelivr.net/gh/quiple/galmuri/dist/Galmuri11.woff2') format('woff2');}
+  :root{
+    --toss-blue:#3182f6; --toss-blue-dark:#1b64da; --bg:#eef3e2; --card:#fff;
+    --text:#2b2b2b; --sub:#7a7a6a; --line:#d7dcc4; --acorn:#a65a18;
+    --ok:#19a567; --edit:#e08a00; --ink:#3b3324; --leaf:#7cc05a;
+    --pix:'Galmuri11','DungGeunMo',monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:
+      repeating-linear-gradient(0deg,#0000 0 14px,#00000008 14px 15px),
+      repeating-linear-gradient(90deg,#0000 0 14px,#00000008 14px 15px), var(--bg);
+    color:var(--text);font-family:var(--pix);image-rendering:pixelated;}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
+  .intro{width:100%;}
+  .intro h1{font-size:18px;margin:0 0 8px;letter-spacing:-.5px;}
+  .intro p{color:var(--sub);font-size:12px;margin:0;line-height:1.8;}
+  .intro b{color:var(--text);}
+  .badge{display:inline-block;background:#ffec9e;border:2px solid var(--ink);padding:1px 6px;font-size:11px;margin-left:4px;}
+
+  /* ===== 폰 목업 (픽셀 테두리) ===== */
+  .phone-col{position:sticky;top:20px;}
+  .phone{width:362px;background:#fff;border:4px solid var(--ink);border-radius:10px;overflow:hidden;
+    box-shadow:6px 6px 0 #00000022;}
+  .phone-inner{height:700px;display:flex;flex-direction:column;background:var(--bg);}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;
+    background:#fff;border-bottom:3px solid var(--ink);}
+  .brand{font-size:13px;font-weight:700;}
+  .pills{display:flex;gap:6px;}
+  .pill{border:2px solid var(--ink);padding:4px 8px;font-size:12px;font-weight:700;background:#fff7ec;}
+  .pill.acorn{color:var(--acorn);}
+  .pill.streak{color:#d9480f;background:#ffe8d9;}
+
+  /* 무대: 도트 풍 계단 그라데이션 */
+  .stage{position:relative;height:210px;overflow:hidden;border-bottom:3px solid var(--ink);}
+  .sky{position:absolute;inset:0;background:
+      linear-gradient(#bfe7ff 0 40%,#d6f0ff 40% 70%,#eaf8ff 70% 100%);transition:background .3s;}
+  .floor{position:absolute;left:0;right:0;bottom:0;height:60px;
+      background:linear-gradient(#9bd17a 0 30%,#86c662 30% 100%);
+      border-top:3px solid #5f9a3e;transition:background .3s;}
+  .pines{position:absolute;left:0;right:0;bottom:54px;display:flex;justify-content:space-around;
+      font-size:22px;opacity:.7;pointer-events:none;}
+  .tree{position:absolute;left:16px;bottom:42px;font-size:78px;line-height:1;}
+  .tree-acorns{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:13px;white-space:nowrap;}
+  .squirrel-wrap{position:absolute;right:52px;bottom:46px;text-align:center;}
+  .squirrel{font-size:66px;line-height:1;animation:bob 2.4s steps(2) infinite;}
+  .squirrel.working{animation:bob .6s steps(2) infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .deco{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;}
+  .deco.hat{top:-14px;font-size:26px;} .deco.scarf{bottom:2px;font-size:22px;} .deco.ring{bottom:6px;left:66%;font-size:15px;}
+  .falling{position:absolute;inset:0;pointer-events:none;}
+  .acorn-drop{position:absolute;font-size:18px;animation:drop 1s steps(6) forwards;}
+  @keyframes drop{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(104px);opacity:0;}}
+
+  .panel{padding:14px;}
+  .hint{color:var(--sub);font-size:11px;line-height:1.7;text-align:center;margin:4px 0 10px;}
+  .time-display{text-align:center;font-size:38px;font-weight:800;margin:6px 0;}
+  .time-display small{font-size:14px;color:var(--sub);margin-left:4px;}
+  .time-display.countdown{color:var(--toss-blue);font-variant-numeric:tabular-nums;}
+  input[type="range"]{width:100%;accent-color:var(--toss-blue);height:28px;}
+  .slider-bounds{display:flex;justify-content:space-between;color:var(--sub);font-size:10px;margin-top:-4px;}
+  .btn{width:100%;margin-top:12px;padding:13px;border:3px solid var(--ink);font-size:14px;font-weight:700;
+    font-family:var(--pix);cursor:pointer;box-shadow:3px 3px 0 var(--ink);}
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
+  .btn.primary{background:var(--toss-blue);color:#fff;}
+  .btn.ghost{background:#f1f1e6;color:var(--sub);}
+  .btn.ad{background:#fff0d0;color:var(--acorn);margin-top:8px;}
+  .btn.share{background:#eaf2ff;color:var(--toss-blue-dark);}
+  .progress{height:12px;background:#fff;border:2px solid var(--ink);overflow:hidden;margin:8px 0;}
+  .progress-bar{height:100%;width:0%;background:var(--toss-blue);}
+  .session-acorns{text-align:center;color:var(--sub);font-size:12px;}
+  .session-acorns strong{color:var(--acorn);font-size:16px;}
+  .streak-bar{display:flex;align-items:center;gap:8px;justify-content:center;font-size:11px;color:var(--sub);margin-top:6px;}
+  .streak-bar b{color:#d9480f;}
+
+  .tabbar{margin-top:auto;display:flex;border-top:3px solid var(--ink);background:#fff;}
+  .tab{flex:1;padding:11px 0;border:none;background:none;font-size:11px;font-weight:700;color:var(--sub);font-family:var(--pix);cursor:pointer;}
+  .tab.active{color:var(--toss-blue);background:#eaf2ff;}
+  .sheet{flex:1;overflow-y:auto;background:var(--bg);}
+  .sheet h2{font-size:15px;margin:4px 0;}
+  .phase-tag{display:inline-block;background:#ffe8d9;border:2px solid var(--ink);color:#d9480f;font-size:10px;padding:1px 6px;margin-left:6px;}
+  .shop-group{margin-bottom:14px;}
+  .shop-group h3{font-size:12px;color:var(--sub);margin:0 0 6px;}
+  .item-row{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);padding:9px 10px;margin-bottom:7px;}
+  .item-emoji{font-size:24px;width:30px;text-align:center;}
+  .item-info{flex:1;} .item-name{font-weight:700;font-size:13px;} .item-price{color:var(--acorn);font-size:11px;}
+  .item-btn{border:2px solid var(--ink);padding:7px 10px;font-size:11px;font-weight:700;font-family:var(--pix);cursor:pointer;}
+  .item-btn.buy{background:#fff7ec;color:var(--acorn);}
+  .item-btn.equip{background:#eaf2ff;color:var(--toss-blue);}
+  .item-btn.equipped{background:var(--toss-blue);color:#fff;}
+  .item-btn:disabled{background:#eee;color:#aaa;border-color:#bbb;cursor:not-allowed;}
+  .friends-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+  .friend-card{background:var(--card);border:2px solid var(--ink);padding:12px 6px;text-align:center;}
+  .friend-emoji{font-size:36px;}
+  .friend-card.locked .friend-emoji{filter:grayscale(1) brightness(.35);opacity:.5;}
+  .friend-name{font-weight:700;font-size:12px;margin-top:6px;} .friend-status{font-size:11px;color:var(--sub);margin-top:3px;}
+  .friend-card .item-btn{margin-top:7px;}
+
+  /* 랭킹 (Phase 2) */
+  .rank-row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--ink);padding:9px 11px;margin-bottom:7px;}
+  .rank-row.me{background:#eaf2ff;}
+  .rank-no{font-weight:800;width:24px;text-align:center;}
+  .rank-name{flex:1;font-size:13px;font-weight:700;}
+  .rank-min{color:var(--acorn);font-size:12px;font-weight:700;}
+  .lock-note{background:#fff;border:2px dashed var(--ink);padding:12px;font-size:11px;color:var(--sub);line-height:1.7;text-align:center;margin-bottom:10px;}
+
+  .toast{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 14px;border:2px solid #000;font-size:12px;font-weight:700;z-index:50;max-width:84%;text-align:center;}
+  .hidden{display:none !important;}
+
+  /* ===== 우측 ===== */
+  .review-col{flex:1;min-width:330px;}
+  .box{background:#fff;border:3px solid var(--ink);padding:14px;margin-bottom:16px;box-shadow:4px 4px 0 #00000018;}
+  .box h2{font-size:14px;margin:0 0 4px;} .box .sub{color:var(--sub);font-size:11px;margin:0 0 12px;line-height:1.6;}
+  .demo-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px;}
+  .demo-btn{border:2px solid var(--ink);background:#fff;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--pix);box-shadow:2px 2px 0 var(--ink);}
+  .demo-btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);}
+  .demo-btn.warn{color:#d6336c;} .demo-btn.good{color:var(--ok);}
+  .speed-seg{display:inline-flex;border:2px solid var(--ink);}
+  .speed-seg button{border:none;background:#fff;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;color:var(--sub);font-family:var(--pix);}
+  .speed-seg button.active{background:var(--toss-blue);color:#fff;}
+  .speed-label{font-size:11px;color:var(--sub);margin-right:6px;align-self:center;}
+
+  .check-summary{font-size:11px;color:var(--sub);margin:0 0 12px;}
+  .check-group{margin-bottom:12px;}
+  .check-group > h3{font-size:12px;color:var(--toss-blue);margin:0 0 7px;border-left:4px solid var(--toss-blue);padding-left:7px;}
+  .check-item{border:2px solid var(--line);padding:9px 11px;margin-bottom:7px;}
+  .check-item.ok{border-color:var(--ok);background:#f0fbf5;}
+  .check-item.edit{border-color:var(--edit);background:#fff9ec;}
+  .ci-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+  .ci-title{font-weight:700;font-size:12px;} .ci-id{color:var(--sub);font-weight:700;font-size:10px;margin-right:5px;}
+  .ci-phase{font-size:9px;background:#ffe8d9;border:1px solid var(--ink);color:#d9480f;padding:0 4px;margin-left:4px;}
+  .ci-detail{color:var(--sub);font-size:11px;margin-top:3px;line-height:1.5;}
+  .ci-actions{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+  .ci-btn{border:2px solid var(--line);background:#fff;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--pix);}
+  .ci-btn.ok.active{background:var(--ok);color:#fff;border-color:var(--ok);}
+  .ci-btn.edit.active{background:var(--edit);color:#fff;border-color:var(--edit);}
+  .ci-btn.try{margin-left:auto;color:var(--toss-blue);border-color:#9ec2ff;}
+  .ci-note{width:100%;margin-top:7px;border:2px solid var(--line);padding:7px;font-size:11px;font-family:var(--pix);resize:vertical;min-height:0;height:34px;}
+  .ci-note.hidden{display:none;}
+  .reset-link{background:none;border:none;color:var(--sub);font-size:11px;text-decoration:underline;cursor:pointer;padding:0;margin-top:6px;font-family:var(--pix);}
+  @media(max-width:780px){.phone-col{position:static;}.phone{width:100%;max-width:362px;margin:0 auto;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>🐿️ 다람쥐 뽀모도로 — 요구사항 확인 목업 <span class="badge">v2</span></h1>
+    <p>대화에서 정리한 <b>v2 요구사항</b>(레트로·도트 / 연속 보너스 / 리워드 광고 / 랭킹·친구 / 로컬+서버)을 직접 만져보세요.
+       왼쪽 앱을 조작하고, 오른쪽에서 각 항목이 <b>내가 원하던 게 맞는지</b> 표시하면 됩니다.
+       <b>데모 버튼</b>으로 기다림 없이 모든 동작을 즉시 확인할 수 있어요. (표시·진행은 자동 저장)</p>
+  </div>
+
+  <!-- 폰 목업 -->
+  <div class="phone-col">
+    <div class="phone"><div class="phone-inner" id="app">
+      <header class="topbar">
+        <span class="brand">🐿️ 다람쥐 뽀모도로</span>
+        <span class="pills">
+          <span class="pill streak" id="streakPill">🔥 0일</span>
+          <span class="pill acorn" id="acornBalance">🌰 0</span>
+        </span>
+      </header>
+      <section class="stage">
+        <div class="sky" id="sky"></div>
+        <div class="floor" id="floor"></div>
+        <div class="pines">🌲🌲🌲🌲🌲🌲</div>
+        <div class="tree">🌳<span class="tree-acorns" id="treeAcorns"></span></div>
+        <div class="squirrel-wrap">
+          <div class="deco hat" id="decoHat"></div>
+          <div class="squirrel" id="squirrel">🐿️</div>
+          <div class="deco scarf" id="decoScarf"></div>
+          <div class="deco ring" id="decoRing"></div>
+        </div>
+        <div class="falling" id="fallingLayer"></div>
+      </section>
+
+      <section class="panel" id="timerPanel">
+        <div id="setupView">
+          <p class="hint">집중할 시간을 정하고 시작해요.<br/>집중하는 동안 다람쥐가 도토리를 모아요.</p>
+          <div class="time-display"><span id="minutesLabel">25</span><small>분</small></div>
+          <input type="range" id="minuteSlider" min="5" max="60" step="5" value="25" />
+          <div class="slider-bounds"><span>5분</span><span>60분</span></div>
+          <div class="streak-bar">🔥 연속 <b id="streakText">0일</b> · 다음 보너스까지 <b id="streakNext">3일</b></div>
+          <button class="btn primary" id="startBtn">집중 시작 🌰</button>
+          <button class="btn ad" id="adBtn">📺 광고 보고 도토리 +3 (오늘 <span id="adLeft">5</span>회 남음)</button>
+        </div>
+        <div id="focusView" class="hidden">
+          <p class="hint">집중 중이에요. 화면을 벗어나면 포기로 처리돼요!</p>
+          <div class="time-display countdown" id="countdown">25:00</div>
+          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+          <p class="session-acorns">이번 집중 도토리: <strong id="sessionAcorns">0</strong> 🌰</p>
+          <button class="btn ghost" id="giveUpBtn">포기하기 (절반만 획득)</button>
+        </div>
+      </section>
+
+      <nav class="tabbar">
+        <button class="tab active" data-tab="timer">⏱️ 집중</button>
+        <button class="tab" data-tab="shop">🛍️ 상점</button>
+        <button class="tab" data-tab="friends">📖 도감</button>
+        <button class="tab" data-tab="rank">🏆 랭킹</button>
+      </nav>
+
+      <section class="panel sheet hidden" id="shopPanel">
+        <h2>🛍️ 꾸미기 상점</h2>
+        <p class="hint">도토리로 아이템을 사고, 눌러서 장착/해제해요.</p>
+        <div id="shopList"></div>
+      </section>
+      <section class="panel sheet hidden" id="friendsPanel">
+        <h2>📖 다람쥐 도감</h2>
+        <p class="hint">도토리를 모아 다람쥐를 수집하세요. (능력치 효과 없는 수집 전용!)</p>
+        <div id="friendsList" class="friends-grid"></div>
+      </section>
+      <section class="panel sheet hidden" id="rankPanel">
+        <h2>🏆 랭킹 <span class="phase-tag">Phase 2</span></h2>
+        <div class="lock-note">🔒 랭킹·친구는 <b>토스 로그인</b>이 필요해요.<br/>아래는 로그인 후 모습 미리보기예요.</div>
+        <div id="rankList"></div>
+        <button class="btn share" id="shareBtn">📤 내 다람쥐·집중 기록 공유하기</button>
+      </section>
+      <div class="toast hidden" id="toast"></div>
+    </div></div>
+  </div>
+
+  <!-- 우측 -->
+  <div class="review-col">
+    <div class="box">
+      <h2>⚡ 빠른 데모</h2>
+      <p class="sub">실제로 기다리지 않아도 모든 동작을 즉시 확인할 수 있어요.</p>
+      <div class="demo-row">
+        <span class="speed-label">집중 속도</span>
+        <span class="speed-seg" id="speedSeg">
+          <button data-speed="1">실시간</button>
+          <button data-speed="60" class="active">빠르게 ×60</button>
+          <button data-speed="300">초고속 ×300</button>
+        </span>
+      </div>
+      <div class="demo-row">
+        <button class="demo-btn good" data-act="success">✅ 집중 즉시 성공</button>
+        <button class="demo-btn warn" data-act="giveup">🚪 10분 후 포기</button>
+        <button class="demo-btn warn" data-act="leave">📱 화면 이탈 시뮬</button>
+      </div>
+      <div class="demo-row">
+        <button class="demo-btn good" data-act="nextday">📅 다음 날 +1 (streak)</button>
+        <button class="demo-btn" data-act="ad">📺 광고 보상 +3</button>
+      </div>
+      <div class="demo-row">
+        <button class="demo-btn" data-act="add50">🌰 도토리 +50</button>
+        <button class="demo-btn" data-act="sync">☁️ 서버 동기화 시뮬</button>
+        <button class="demo-btn" data-act="reset">↺ 전체 초기화</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>✅ v2 요구사항 확인 체크리스트</h2>
+      <p class="check-summary" id="checkSummary"></p>
+      <div id="checkList"></div>
+      <button class="reset-link" id="resetChecks">체크 기록 초기화</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 카탈로그 (명세서 9.1 가격표) ===== */
+const ACORN_PER_MINUTES = 5;
+const AD_DAILY_CAP = 5, AD_REWARD = 3;
+const ITEMS = [
+  {id:'hat_acorn',slot:'hat',name:'도토리 모자',emoji:'🌰',price:10},
+  {id:'hat_maple',slot:'hat',name:'단풍잎 모자',emoji:'🍁',price:15},
+  {id:'hat_chestnut',slot:'hat',name:'밤송이 모자',emoji:'🌟',price:20},
+  {id:'scarf_red',slot:'scarf',name:'빨간 목도리',emoji:'🧣',price:12},
+  {id:'scarf_check',slot:'scarf',name:'체크 목도리',emoji:'🟫',price:18},
+  {id:'ring_acorn',slot:'ring',name:'도토리 반지',emoji:'💍',price:15},
+  {id:'ring_star',slot:'ring',name:'별 반지',emoji:'⭐',price:25},
+  {id:'sky_clear',slot:'skyBg',name:'맑은 하늘',emoji:'☀️',price:25,css:'linear-gradient(#9fd8ff 0 40%,#cdeeff 40% 100%)'},
+  {id:'sky_sunset',slot:'skyBg',name:'노을 하늘',emoji:'🌇',price:35,css:'linear-gradient(#ffb88c 0 40%,#ffe0bf 40% 100%)'},
+  {id:'floor_grass',slot:'floorBg',name:'잔디밭',emoji:'🌱',price:25,css:'linear-gradient(#9bd17a 0 30%,#86c662 30% 100%)'},
+  {id:'floor_leaf',slot:'floorBg',name:'낙엽밭',emoji:'🍂',price:35,css:'linear-gradient(#e0a96d 0 30%,#c9853f 30% 100%)'},
+];
+const SQUIRRELS = [
+  {id:'sq_basic',name:'기본 다람쥐',emoji:'🐿️',price:0},
+  {id:'sq_baby',name:'아기 다람쥐',emoji:'🐿️',price:50},
+  {id:'sq_stripe',name:'줄무늬 다람쥐',emoji:'🐿️',price:100},
+  {id:'sq_white',name:'흰 다람쥐',emoji:'🐿️',price:200},
+];
+const DEFAULT_SKY='linear-gradient(#bfe7ff 0 40%,#d6f0ff 40% 70%,#eaf8ff 70% 100%)';
+const DEFAULT_FLOOR='linear-gradient(#9bd17a 0 30%,#86c662 30% 100%)';
+const STREAK_MILESTONES=[3,7,14]; // 마일스톤 일수
+
+/* ===== 상태 ===== */
+const SAVE_KEY='daramzi_mockup_v2';
+const defaultState=()=>({acorns:0,defaultMinutes:25,ownedItems:[],
+  equipped:{hat:null,scarf:null,ring:null,skyBg:null,floorBg:null},ownedSquirrels:['sq_basic'],
+  streakDays:0,totalFocusMin:0,adsToday:0,synced:false});
+let state=load(); let demoSpeed=60; let session=null;
+function load(){try{const r=localStorage.getItem(SAVE_KEY);if(r)return Object.assign(defaultState(),JSON.parse(r));}catch(e){}return defaultState();}
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch(e){}}
+const $=id=>document.getElementById(id);
+
+/* ===== streak 보너스 ===== */
+function streakBonus(days){return days>=14?5:days>=7?3:days>=3?1:0;}
+function nextMilestone(days){for(const m of STREAK_MILESTONES)if(days<m)return m;return days+1;}
+
+/* ===== 타이머 ===== */
+function startFocus(){
+  const minutes=Number($('minuteSlider').value);
+  session={totalSec:minutes*60,leftSec:minutes*60,dropped:0,timer:null};
+  $('setupView').classList.add('hidden');$('focusView').classList.remove('hidden');
+  $('squirrel').classList.add('working');
+  render();tick(0);
+  session.timer=setInterval(()=>tick(demoSpeed*0.2),200);
+}
+function tick(advance){
+  if(!session)return;
+  session.leftSec-=advance;
+  const elapsed=session.totalSec-session.leftSec;
+  const accrued=Math.floor(elapsed/(ACORN_PER_MINUTES*60));
+  while(session.dropped<accrued){session.dropped++;dropAcorn();}
+  $('countdown').textContent=fmt(Math.max(session.leftSec,0));
+  $('sessionAcorns').textContent=accrued;
+  $('progressBar').style.width=Math.min(elapsed/session.totalSec*100,100)+'%';
+  $('treeAcorns').textContent='🌰'.repeat(Math.min(accrued,8));
+  if(session.leftSec<=0)endFocus('complete');
+}
+function endFocus(reason,hidden){
+  if(!session)return;clearInterval(session.timer);
+  const elapsed=session.totalSec-Math.max(session.leftSec,0);
+  const accrued=Math.floor(elapsed/(ACORN_PER_MINUTES*60));
+  let earned;
+  if(reason==='complete'){
+    const bonus=streakBonus(state.streakDays);
+    earned=accrued+bonus;
+    state.totalFocusMin+=Math.round(elapsed/60);
+    state.acorns+=earned;save();session=null;
+    finishUI();toast('집중 성공! 🌰 '+accrued+(bonus?(' + 연속보너스 '+bonus):'')+' = '+earned+'개');
+  }else{
+    earned=Math.floor(accrued/2);
+    state.totalFocusMin+=Math.round(elapsed/60);
+    state.acorns+=earned;save();session=null;
+    finishUI();
+    toast(hidden?('화면을 벗어나 포기 처리! 절반인 🌰 '+earned+'개만'):('포기했어요. 절반인 🌰 '+earned+'개'));
+  }
+}
+function finishUI(){
+  $('focusView').classList.add('hidden');$('setupView').classList.remove('hidden');
+  $('squirrel').classList.remove('working');$('treeAcorns').textContent='';$('progressBar').style.width='0%';render();
+}
+function dropAcorn(){const l=$('fallingLayer');const e=document.createElement('div');
+  e.className='acorn-drop';e.textContent='🌰';e.style.left=(30+Math.random()*20)+'%';e.style.top='52px';
+  l.appendChild(e);setTimeout(()=>e.remove(),1000);}
+
+/* ===== 렌더 ===== */
+function render(){
+  $('acornBalance').textContent='🌰 '+state.acorns;
+  $('streakPill').textContent='🔥 '+state.streakDays+'일';
+  $('streakText').textContent=state.streakDays+'일';
+  $('streakNext').textContent=(nextMilestone(state.streakDays)-state.streakDays)+'일';
+  $('adLeft').textContent=(AD_DAILY_CAP-state.adsToday);
+  $('adBtn').disabled=state.adsToday>=AD_DAILY_CAP;
+  renderStage();renderShop();renderFriends();renderRank();updateSummary();
+}
+function renderStage(){
+  const sky=eq('skyBg'),floor=eq('floorBg');
+  $('sky').style.background=sky?sky.css:DEFAULT_SKY;
+  $('floor').style.background=floor?floor.css:DEFAULT_FLOOR;
+  $('decoHat').textContent=txt(eq('hat'));$('decoScarf').textContent=txt(eq('scarf'));$('decoRing').textContent=txt(eq('ring'));
+}
+function renderShop(){
+  const groups=[['hat','🎩 모자'],['scarf','🧣 목도리'],['ring','💍 반지'],['skyBg','🌤️ 하늘 배경'],['floorBg','🌳 바닥 배경']];
+  const list=$('shopList');list.innerHTML='';
+  groups.forEach(([slot,label])=>{
+    const w=document.createElement('div');w.className='shop-group';w.innerHTML='<h3>'+label+'</h3>';
+    ITEMS.filter(i=>i.slot===slot).forEach(i=>w.appendChild(itemRow(i)));list.appendChild(w);
+  });
+}
+function itemRow(item){
+  const owned=state.ownedItems.includes(item.id);
+  const equipped=state.equipped[item.slot]===item.id;
+  const row=document.createElement('div');row.className='item-row';
+  const btn=document.createElement('button');btn.className='item-btn';
+  if(!owned){btn.classList.add('buy');btn.textContent='🌰 '+item.price;btn.disabled=state.acorns<item.price;btn.onclick=()=>buy(item);}
+  else if(equipped){btn.classList.add('equipped');btn.textContent='장착중';btn.onclick=()=>equip(item,false);}
+  else{btn.classList.add('equip');btn.textContent='장착';btn.onclick=()=>equip(item,true);}
+  row.innerHTML='<div class="item-emoji">'+item.emoji+'</div><div class="item-info"><div class="item-name">'+item.name+'</div><div class="item-price">'+(owned?'보유중':'🌰 '+item.price)+'</div></div>';
+  row.appendChild(btn);return row;
+}
+function renderFriends(){
+  const list=$('friendsList');list.innerHTML='';
+  SQUIRRELS.forEach(sq=>{
+    const owned=state.ownedSquirrels.includes(sq.id);
+    const c=document.createElement('div');c.className='friend-card'+(owned?'':' locked');
+    c.innerHTML='<div class="friend-emoji">'+sq.emoji+'</div><div class="friend-name">'+(owned?sq.name:'???')+'</div><div class="friend-status">'+(owned?'수집 완료 ✅':'🌰 '+sq.price)+'</div>';
+    if(!owned){const b=document.createElement('button');b.className='item-btn buy';b.textContent='데려오기';b.disabled=state.acorns<sq.price;b.onclick=()=>adopt(sq);c.appendChild(b);}
+    list.appendChild(c);
+  });
+}
+function renderRank(){
+  // 가상 친구 + 내 기록을 집중 시간 기준으로 정렬
+  const others=[{name:'도토리왕',min:520},{name:'밤톨이',min:330},{name:'다람이',min:180},{name:'코코',min:90}];
+  const me={name:'나',min:state.totalFocusMin,me:true};
+  const all=others.concat([me]).sort((a,b)=>b.min-a.min);
+  const list=$('rankList');list.innerHTML='';
+  all.forEach((r,i)=>{
+    const row=document.createElement('div');row.className='rank-row'+(r.me?' me':'');
+    row.innerHTML='<div class="rank-no">'+(i+1)+'</div><div class="rank-name">'+(r.me?'🐿️ 나':r.name)+'</div><div class="rank-min">'+r.min+'분</div>';
+    list.appendChild(row);
+  });
+}
+function buy(item){if(state.acorns<item.price)return;state.acorns-=item.price;state.ownedItems.push(item.id);state.equipped[item.slot]=item.id;state.synced=false;save();render();toast(item.name+' 구매 완료!');}
+function equip(item,on){state.equipped[item.slot]=on?item.id:null;state.synced=false;save();render();}
+function adopt(sq){if(state.acorns<sq.price)return;state.acorns-=sq.price;state.ownedSquirrels.push(sq.id);state.synced=false;save();render();toast(sq.name+'를 도감에 추가! 📖');}
+
+/* ===== 탭 ===== */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  $('timerPanel').classList.toggle('hidden',name!=='timer');
+  $('shopPanel').classList.toggle('hidden',name!=='shop');
+  $('friendsPanel').classList.toggle('hidden',name!=='friends');
+  $('rankPanel').classList.toggle('hidden',name!=='rank');
+}
+
+/* ===== 유틸 ===== */
+function eq(slot){return ITEMS.find(i=>i.id===state.equipped[slot])||null;}
+function txt(i){return i?i.emoji:'';}
+function fmt(sec){sec=Math.max(Math.round(sec),0);const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+let toastTimer=null;
+function toast(m){const e=$('toast');e.textContent=m;e.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.add('hidden'),2800);}
+
+/* ===== 데모 컨트롤 ===== */
+function demoAct(act){
+  if(act==='success'){quickSession(Number($('minuteSlider').value),true);}
+  else if(act==='giveup'){quickSession(10,false);}
+  else if(act==='leave'){
+    if(!session){startFocus();setTimeout(()=>{session&&(session.leftSec=session.totalSec-10*60);endFocus('abandon',true);},150);}
+    else endFocus('abandon',true);
+  }
+  else if(act==='nextday'){state.streakDays++;state.synced=false;save();render();
+    const b=streakBonus(state.streakDays);toast('연속 '+state.streakDays+'일! '+(b?('보너스 도토리 +'+b):'곧 보너스가 시작돼요'));}
+  else if(act==='ad'){watchAd();}
+  else if(act==='add50'){state.acorns+=50;state.synced=false;save();render();toast('🌰 50개 추가');switchTab('shop');}
+  else if(act==='sync'){state.synced=true;save();toast('☁️ 서버와 동기화 완료 (다른 기기에서도 이어집니다)');}
+  else if(act==='reset'){state=defaultState();save();render();switchTab('timer');toast('초기화했어요');}
+}
+function watchAd(){
+  if(state.adsToday>=AD_DAILY_CAP){toast('오늘 광고 보상은 모두 받았어요');return;}
+  state.adsToday++;state.acorns+=AD_REWARD;state.synced=false;save();render();
+  toast('📺 광고 시청 완료! 🌰 +'+AD_REWARD);
+}
+function quickSession(minutes,complete){
+  if(session){clearInterval(session.timer);session=null;$('focusView').classList.add('hidden');$('setupView').classList.remove('hidden');$('squirrel').classList.remove('working');}
+  const acc=Math.floor((minutes*60)/(ACORN_PER_MINUTES*60));
+  state.totalFocusMin+=complete?minutes:10;
+  let earned,msg;
+  if(complete){const bonus=streakBonus(state.streakDays);earned=acc+bonus;
+    msg='집중 성공! 🌰 '+acc+(bonus?(' + 연속보너스 '+bonus):'')+' = '+earned+'개 ('+minutes+'분)';}
+  else{earned=Math.floor(acc/2);msg='10분 후 포기 — 절반인 🌰 '+earned+'개';}
+  state.acorns+=earned;state.synced=false;save();render();toast(msg);
+}
+
+/* ===== 요구사항 체크리스트 (v2) ===== */
+const REQS=[
+  {g:'⏱️ 집중 타이머',items:[
+    {id:'FR-T1',t:'기본 25분',d:'앱 진입 시 기본값 25분',try:'timer'},
+    {id:'FR-T2',t:'시간 설정 5~60분',d:'슬라이더로 5~60분 5분 단위',try:'timer'},
+    {id:'FR-T3',t:'시작/포기',d:'시작 후 진행, 중도 포기 가능',try:'timer'},
+    {id:'FR-T4',t:'도토리 모으기 도트 애니메이션',d:'집중 중 다람쥐가 도토리 모으는 연출',try:'startDemo'},
+    {id:'FR-T5',t:'완료 = 100% 지급',d:'시간을 다 채우면 도토리 전량(+보너스)',try:'success'},
+    {id:'FR-T6',t:'포기 = 50% 지급',d:'중도 포기 시 적립분 절반',try:'giveup'},
+    {id:'FR-T7',t:'화면 이탈 = 포기',d:'다른 화면/앱 전환도 포기로 간주',try:'leave'},
+  ]},
+  {g:'🌰 도토리 & 연속 보상',items:[
+    {id:'FR-A1',t:'5분당 1개 적립',d:'집중 시간에 비례(5분=1개)',try:'success'},
+    {id:'FR-A3',t:'연속(streak) 보너스',d:'3·7·14일 마일스톤마다 보너스 도토리',try:'nextday'},
+    {id:'FR-S1~3',t:'streak 카운트·시각화',d:'연속 일수와 다음 보너스 진행 표시',try:'timer'},
+    {id:'FR-A5',t:'리워드 광고 보상',d:'광고 시청 시 도토리 +3 (일 5회 제한)',try:'ad'},
+    {id:'FR-A6',t:'보유 도토리 표시',d:'상단에 항상 보유량 표시',try:'timer'},
+  ]},
+  {g:'🎩 꾸미기 상점',items:[
+    {id:'FR-D1',t:'착용 아이템(모자·목도리·반지)',d:'모자3·목도리2·반지2',try:'shop'},
+    {id:'FR-D2',t:'배경(하늘·바닥)',d:'하늘2·바닥2 꾸미기',try:'shop'},
+    {id:'FR-D3/4',t:'구매·장착/해제',d:'사면 바로 장착, 눌러서 해제',try:'shop'},
+  ]},
+  {g:'📖 다람쥐 도감(수집)',items:[
+    {id:'FR-C1',t:'다람쥐 영입',d:'도토리로 수집(50/100/200)',try:'friends'},
+    {id:'FR-C2',t:'도감 컬렉션',d:'수집한 다람쥐 모아보기',try:'friends'},
+    {id:'FR-C3',t:'미보유=실루엣',d:'안 얻은 건 잠금 실루엣',try:'friends'},
+    {id:'DEC-C',t:'능력치 효과 없음',d:'적립 속도 등 효과 없는 순수 수집',try:'friends'},
+  ]},
+  {g:'🏆 소셜 (Phase 2)',items:[
+    {id:'FR-R1',t:'공유·초대',d:'다람쥐/기록 공유',try:'rank',phase:1},
+    {id:'FR-R3',t:'랭킹·리더보드',d:'집중 시간 기준 순위',try:'rank',phase:1},
+    {id:'DEP-LOGIN',t:'토스 로그인 전제',d:'랭킹/친구/동기화에 필요',try:'rank',phase:1},
+  ]},
+  {g:'⚙️ 정책 / 결정',items:[
+    {id:'DEC-AD',t:'리워드 광고형 수익화',d:'현금 IAP 없음, 광고로만 추가 보상',try:'ad'},
+    {id:'DEC-SYNC',t:'로컬+서버 동기화',d:'평소 로컬, 로그인 시 서버 동기화',try:'sync'},
+    {id:'DEC-ART',t:'레트로·도트 비주얼',d:'8비트 픽셀 톤 (이모지는 임시 표현)',try:null},
+    {id:'DEC-KPI',t:'북스타=재방문/리텐션',d:'streak·보상으로 매일 돌아오게',try:'nextday'},
+    {id:'DEC-OUT',t:'할 일(Task) 관리 제외',d:'이번 범위 아님',try:null},
+  ]},
+];
+const CHECK_KEY='daramzi_mockup_checks_v2';
+let checks=loadChecks();
+function loadChecks(){try{return JSON.parse(localStorage.getItem(CHECK_KEY))||{};}catch(e){return {};}}
+function saveChecks(){try{localStorage.setItem(CHECK_KEY,JSON.stringify(checks));}catch(e){}}
+function renderChecks(){
+  const root=$('checkList');root.innerHTML='';
+  REQS.forEach(group=>{
+    const gEl=document.createElement('div');gEl.className='check-group';
+    gEl.innerHTML='<h3>'+group.g+'</h3>';
+    group.items.forEach(it=>{
+      const st=checks[it.id]||{};
+      const item=document.createElement('div');
+      item.className='check-item'+(st.mark==='ok'?' ok':st.mark==='edit'?' edit':'');
+      const tryBtn=it.try?'<button class="ci-btn try" data-try="'+it.try+'">▶ 데모</button>':'';
+      const phase=it.phase?'<span class="ci-phase">Phase 2</span>':'';
+      item.innerHTML=
+        '<div class="ci-head"><div><span class="ci-id">'+it.id+'</span><span class="ci-title">'+it.t+'</span>'+phase+
+        '<div class="ci-detail">'+it.d+'</div></div></div>'+
+        '<div class="ci-actions">'+
+          '<button class="ci-btn ok'+(st.mark==='ok'?' active':'')+'" data-mark="ok" data-rid="'+it.id+'">✅ 맞아요</button>'+
+          '<button class="ci-btn edit'+(st.mark==='edit'?' active':'')+'" data-mark="edit" data-rid="'+it.id+'">✏️ 수정필요</button>'+
+          tryBtn+
+        '</div>'+
+        '<textarea class="ci-note'+(st.mark==='edit'?'':' hidden')+'" data-note="'+it.id+'" placeholder="어떻게 바꾸고 싶은지 메모...">'+(st.note||'')+'</textarea>';
+      gEl.appendChild(item);
+    });
+    root.appendChild(gEl);
+  });
+  updateSummary();
+}
+function updateSummary(){
+  let total=0,ok=0,edit=0;
+  REQS.forEach(g=>g.items.forEach(it=>{total++;const m=(checks[it.id]||{}).mark;if(m==='ok')ok++;if(m==='edit')edit++;}));
+  const el=$('checkSummary');if(el)el.textContent='확인 '+ok+' · 수정필요 '+edit+' · 미확인 '+(total-ok-edit)+' / 총 '+total+'개';
+}
+function runTry(key){
+  if(['timer','shop','friends','rank'].includes(key))switchTab(key);
+  else if(key==='startDemo'){switchTab('timer');if(!session)startFocus();}
+  else demoAct(key);
+}
+
+/* ===== 이벤트 ===== */
+function init(){
+  const slider=$('minuteSlider');slider.value=state.defaultMinutes;$('minutesLabel').textContent=state.defaultMinutes;
+  slider.addEventListener('input',()=>{$('minutesLabel').textContent=slider.value;state.defaultMinutes=Number(slider.value);save();});
+  $('startBtn').addEventListener('click',startFocus);
+  $('giveUpBtn').addEventListener('click',()=>endFocus('abandon'));
+  $('adBtn').addEventListener('click',watchAd);
+  $('shareBtn').addEventListener('click',()=>toast('📤 (Phase 2) 친구에게 공유·초대 — 토스 공유 기능 연동 예정'));
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&session)endFocus('abandon',true);});
+  $('speedSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    demoSpeed=Number(b.dataset.speed);document.querySelectorAll('#speedSeg button').forEach(x=>x.classList.toggle('active',x===b));});
+  document.querySelectorAll('.demo-btn').forEach(b=>b.addEventListener('click',()=>demoAct(b.dataset.act)));
+  $('checkList').addEventListener('click',e=>{
+    const mark=e.target.closest('[data-mark]');
+    if(mark){const rid=mark.dataset.rid;const cur=(checks[rid]||{});cur.mark=cur.mark===mark.dataset.mark?null:mark.dataset.mark;checks[rid]=cur;saveChecks();renderChecks();return;}
+    const tryBtn=e.target.closest('[data-try]');
+    if(tryBtn){runTry(tryBtn.dataset.try);}
+  });
+  $('checkList').addEventListener('input',e=>{const ta=e.target.closest('[data-note]');if(ta){const rid=ta.dataset.note;checks[rid]=Object.assign(checks[rid]||{},{note:ta.value});saveChecks();}});
+  $('resetChecks').addEventListener('click',()=>{if(confirm('체크 기록을 모두 지울까요?')){checks={};saveChecks();renderChecks();}});
+  render();renderChecks();
+}
+init();
+</script>
+</body>
+</html>
