@@ -48,8 +48,10 @@
     font-size:22px;opacity:.55;pointer-events:none;filter:saturate(.85);}
   .tree{position:absolute;left:18px;bottom:42px;font-size:76px;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.08));}
   .tree-acorns{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:13px;white-space:nowrap;}
-  .squirrel-wrap{position:absolute;right:54px;bottom:46px;text-align:center;}
-  .squirrel{font-size:66px;line-height:1;animation:bob 2.6s ease-in-out infinite;filter:drop-shadow(0 6px 8px rgba(0,0,0,.12));}
+  .squirrel-wrap{position:absolute;right:44px;bottom:44px;text-align:center;}
+  .squirrel{line-height:1;animation:bob 2.6s ease-in-out infinite;filter:drop-shadow(0 8px 10px rgba(0,0,0,.14));}
+  img.squirrel{width:124px;height:124px;object-fit:contain;display:block;}
+  div.squirrel{font-size:66px;}
   .squirrel.working{animation:bob .9s ease-in-out infinite;}
   @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
   .deco{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;}
@@ -177,7 +179,9 @@
         <div class="tree">🌳<span class="tree-acorns" id="treeAcorns"></span></div>
         <div class="squirrel-wrap">
           <div class="deco hat" id="decoHat"></div>
-          <div class="squirrel" id="squirrel">🐿️</div>
+          <img class="squirrel" id="squirrel" alt="다람쥐"
+               src="https://mcp-tools-z-image-turbo.hf.space/--replicas/sjbqs/gradio_api/file=/tmp/gradio/8620c4c82eae7ede33c69eea9ccd1fc701c177f73b25a1e1be75d764c31be791/image.webp"
+               onerror="this.onerror=null;this.outerHTML='&lt;div class=&quot;squirrel&quot; id=&quot;squirrel&quot;&gt;🐿️&lt;/div&gt;'" />
           <div class="deco scarf" id="decoScarf"></div>
           <div class="deco ring" id="decoRing"></div>
         </div>
@@ -190,7 +194,6 @@
           <div class="time-display"><span id="minutesLabel">25</span><small>분</small></div>
           <input type="range" id="minuteSlider" min="5" max="60" step="5" value="25" />
           <div class="slider-bounds"><span>5분</span><span>60분</span></div>
-          <div class="streak-bar">🔥 연속 <b id="streakText">0일</b> · 다음 보너스까지 <b id="streakNext">3일</b></div>
           <button class="btn primary" id="startBtn">집중 시작 🌰</button>
           <button class="btn ad" id="adBtn">📺 광고 보고 도토리 +3 (오늘 <span id="adLeft">5</span>회 남음)</button>
         </div>
@@ -361,8 +364,6 @@ function dropAcorn(){const l=$('fallingLayer');const e=document.createElement('d
 function render(){
   $('acornBalance').textContent='🌰 '+state.acorns;
   $('streakPill').textContent='🔥 '+state.streakDays+'일';
-  $('streakText').textContent=state.streakDays+'일';
-  $('streakNext').textContent=(nextMilestone(state.streakDays)-state.streakDays)+'일';
   $('adLeft').textContent=(AD_DAILY_CAP-state.adsToday);
   $('adBtn').disabled=state.adsToday>=AD_DAILY_CAP;
   renderStage();renderShop();renderFriends();renderRank();updateSummary();
