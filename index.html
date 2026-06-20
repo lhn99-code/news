@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>🐿️ 다람쥐 뽀모도로</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 상단 바: 보유 도토리 -->
+    <header class="topbar">
+      <span class="brand">🐿️ 다람쥐 뽀모도로</span>
+      <span class="acorn-balance" id="acornBalance">🌰 0</span>
+    </header>
+
+    <!-- 다람쥐 무대 (배경 + 캐릭터 + 꾸미기) -->
+    <section class="stage" id="stage">
+      <div class="sky" id="sky"></div>
+      <div class="floor" id="floor"></div>
+      <div class="tree" id="tree">🌳<span class="tree-acorns" id="treeAcorns"></span></div>
+      <div class="squirrel-wrap">
+        <div class="deco hat" id="decoHat"></div>
+        <div class="squirrel" id="squirrel">🐿️</div>
+        <div class="deco scarf" id="decoScarf"></div>
+        <div class="deco ring" id="decoRing"></div>
+      </div>
+      <div class="falling" id="fallingLayer"></div>
+    </section>
+
+    <!-- 타이머 화면 -->
+    <section class="panel" id="timerPanel">
+      <div id="setupView">
+        <p class="hint">집중할 시간을 정하고 시작해요.<br/>집중하는 동안 다람쥐가 도토리를 모아요.</p>
+        <div class="time-display"><span id="minutesLabel">25</span><small>분</small></div>
+        <input type="range" id="minuteSlider" min="5" max="60" step="5" value="25" />
+        <div class="slider-bounds"><span>5분</span><span>60분</span></div>
+        <button class="primary-btn" id="startBtn">집중 시작 🌰</button>
+      </div>
+
+      <div id="focusView" class="hidden">
+        <p class="hint">집중 중이에요. 화면을 벗어나면 포기로 처리돼요!</p>
+        <div class="time-display countdown" id="countdown">25:00</div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <p class="session-acorns">이번 집중 도토리: <strong id="sessionAcorns">0</strong> 🌰</p>
+        <button class="ghost-btn" id="giveUpBtn">포기하기 (절반만 획득)</button>
+      </div>
+    </section>
+
+    <!-- 하단 탭 -->
+    <nav class="tabbar">
+      <button class="tab active" data-tab="timer">⏱️ 집중</button>
+      <button class="tab" data-tab="shop">🛍️ 상점</button>
+      <button class="tab" data-tab="friends">📖 친구도감</button>
+    </nav>
+
+    <!-- 상점 화면 -->
+    <section class="panel sheet hidden" id="shopPanel">
+      <h2>🛍️ 꾸미기 상점</h2>
+      <p class="hint">도토리로 아이템을 사고, 눌러서 장착/해제해요.</p>
+      <div id="shopList"></div>
+    </section>
+
+    <!-- 친구 도감 화면 -->
+    <section class="panel sheet hidden" id="friendsPanel">
+      <h2>📖 다람쥐 친구 도감</h2>
+      <p class="hint">도토리를 모아 친구를 데려오세요. (수집 전용!)</p>
+      <div id="friendsList" class="friends-grid"></div>
+    </section>
+
+    <!-- 토스트 -->
+    <div class="toast hidden" id="toast"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
